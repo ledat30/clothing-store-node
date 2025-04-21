@@ -1,5 +1,5 @@
 import express from "express";
-import initApiRouter from "./routes/api";
+import initApiRouter from "./routes/api.js";
 import dotenv from "dotenv";
 dotenv.config();
 import bodyParser from "body-parser";

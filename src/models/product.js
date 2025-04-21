@@ -1,6 +1,7 @@
 "use strict";
-const { Model } = require("sequelize");
-module.exports = (sequelize, DataTypes) => {
+import { Model } from "sequelize";
+
+export default (sequelize, DataTypes) => {
     class Product extends Model {
         /**
          * Helper method for defining associations.
@@ -11,8 +12,7 @@ module.exports = (sequelize, DataTypes) => {
             // define association here
             Product.hasMany(models.Review, { foreignKey: "productId" });
             Product.belongsTo(models.Category, { foreignKey: "categoryId" });
-            Product.hasMany(models.ProductAttribute, { foreignKey: "productId" });
-            Product.hasMany(models.Review, { foreignKey: "productId" });
+            Product.hasMany(models.AttributeValue, { foreignKey: "productId" });
         }
     }
     Product.init(
