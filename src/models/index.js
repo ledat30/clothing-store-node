@@ -1,14 +1,17 @@
 import fs from "fs";
 import path from "path";
-import { fileURLToPath } from "url";
+import { fileURLToPath, pathToFileURL } from "url";
 import { Sequelize, DataTypes } from "sequelize";
 import process from "process";
 
-const __filename = fileURLToPath(import.meta.url); // Define __filename
-const __dirname = path.dirname(__filename); // Define __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || "development";
-const config = (await import(`../config/config.json`, { with: { type: "json" } })).default[env];
+
+const configPath = pathToFileURL(path.join(__dirname, '../config/config.json')).href;
+const config = (await import(configPath, { with: { type: "json" } })).default[env];
+
 const db = {};
 
 let sequelize;
@@ -30,7 +33,8 @@ const files = fs
   });
 
 for (const file of files) {
-  const model = (await import(path.join(__dirname, file))).default(sequelize, DataTypes);
+  const modelPath = pathToFileURL(path.join(__dirname, file)).href;
+  const model = (await import(modelPath)).default(sequelize, DataTypes);
   db[model.name] = model;
 }
 

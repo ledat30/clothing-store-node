@@ -10,6 +10,9 @@ const router = express.Router();
 const initApiRouter = (app) => {
   router.post("/users", userController.createUser);
   router.post("/login", userController.login);
+  router.get("/users", userController.getAllUsers);
+  router.put('/users/:id', userController.updateUser);
+  router.delete('/users/:id', userController.deleteUser);
 
   return app.use("/api", router);
 };

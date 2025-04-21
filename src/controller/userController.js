@@ -26,6 +26,29 @@ const createUser = async (req, res) => {
     }
 };
 
+const getAllUsers = async (req, res) => {
+    try {
+        const { limit = 10, page = 1, search = "" } = req.query;
+        const data = await userService.getAllUsers(limit, page, search);
+        const totalPages = Math.ceil(data.totalCount / limit);
+        res.status(200).json({
+            EM: data.EM,
+            EC: data.EC,
+            DT: data.DT,
+            total: data.totalCount,
+            page: Number(page),
+            limit: Number(limit),
+            totalPages,
+        });
+    } catch (error) {
+        res.status(500).json({
+            EM: "Get all user error" + error.message,
+            EC: "-1",
+            DT: "",
+        });
+    }
+};
+
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -80,4 +103,61 @@ const login = async (req, res) => {
     }
 };
 
-export default { login , createUser};
+const updateUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userData = req.body;
+
+        const data = await userService.updateUser(id, userData);
+
+        if (data.EC === "0") {
+            res.status(200).json({
+                EM: data.EM,
+                EC: data.EC,
+                DT: data.DT,
+            });
+        } else {
+            res.status(400).json({
+                EM: data.EM,
+                EC: data.EC,
+                DT: data.DT,
+            });
+        }
+    } catch (error) {
+        res.status(500).json({
+            EM: "Update user error: " + error.message,
+            EC: "-1",
+            DT: "",
+        });
+    }
+};
+
+const deleteUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const data = await userService.deleteUser(id);
+
+        if (data.EC === "0") {
+            res.status(200).json({
+                EM: data.EM,
+                EC: data.EC,
+                DT: data.DT,
+            });
+        } else {
+            res.status(400).json({
+                EM: data.EM,
+                EC: data.EC,
+                DT: data.DT,
+            });
+        }
+    } catch (error) {
+        res.status(500).json({
+            EM: "Delete user error: " + error.message,
+            EC: "-1",
+            DT: "",
+        });
+    }
+};
+
+export default { login , createUser, getAllUsers, updateUser, deleteUser };
