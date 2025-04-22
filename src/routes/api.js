@@ -1,6 +1,7 @@
 import express from "express";
 import userController from "../controller/userController.js";
 import categoryController from "../controller/categoryController.js";
+import productController from "../controller/productController.js";
 
 const router = express.Router();
 
@@ -22,6 +23,11 @@ const initApiRouter = (app) => {
   router.get("/category", categoryController.getAllCategory);
   router.put('/category/:id', categoryController.updateCategory);
   router.delete('/category/:id', categoryController.deleteCategory);
+
+  router.post("/product", productController.createProduct);
+  router.get("/product", productController.getAllProduct);
+  router.put('/product/:id', productController.updateProduct);
+  router.delete('/product/:id', productController.deleteProduct);
 
   return app.use("/api", router);
 };

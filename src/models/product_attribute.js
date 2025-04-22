@@ -2,7 +2,7 @@
 import { Model } from "sequelize";
 
 export default (sequelize, DataTypes) => {
-    class AttributeValue extends Model {
+    class ProductAttribute extends Model {
         /**
          * Helper method for defining associations.
          * This method is not a part of Sequelize lifecycle.
@@ -10,11 +10,11 @@ export default (sequelize, DataTypes) => {
          */
         static associate(models) {
             // define association here
-            AttributeValue.belongsTo(models.Product, { foreignKey: "productId" });
-            AttributeValue.hasMany(models.OrderItem, { foreignKey: "category_id" });
+            ProductAttribute.belongsTo(models.Product, { foreignKey: "productId" });
+            ProductAttribute.hasMany(models.OrderItem, { foreignKey: "category_id" });
         }
     }
-    AttributeValue.init(
+    ProductAttribute.init(
         {
             productId: DataTypes.INTEGER,
             color: DataTypes.STRING,
@@ -24,8 +24,8 @@ export default (sequelize, DataTypes) => {
         },
         {
             sequelize,
-            modelName: "AttributeValue",
+            modelName: "ProductAttribute",
         }
     );
-    return AttributeValue;
+    return ProductAttribute;
 };

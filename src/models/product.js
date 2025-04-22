@@ -11,8 +11,8 @@ export default (sequelize, DataTypes) => {
         static associate(models) {
             // define association here
             Product.hasMany(models.Review, { foreignKey: "productId" });
-            Product.belongsTo(models.Category, { foreignKey: "categoryId" });
-            Product.hasMany(models.AttributeValue, { foreignKey: "productId" });
+            Product.belongsTo(models.Category, { foreignKey: "category_id" });
+            Product.hasMany(models.ProductAttribute, { foreignKey: "productId" });
         }
     }
     Product.init(
@@ -22,7 +22,7 @@ export default (sequelize, DataTypes) => {
             image: DataTypes.BLOB("long"),
             view_count: DataTypes.INTEGER,
             price: DataTypes.STRING,
-            categoryId: DataTypes.INTEGER,
+            category_id: DataTypes.INTEGER,
             contentHtml: DataTypes.TEXT("long"),
             contentMarkdown: DataTypes.TEXT("long"),
             isDelete: DataTypes.STRING,

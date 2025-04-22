@@ -118,7 +118,7 @@ const deleteUser = async (id) => {
             };
         }
 
-        user.isDelete = true;
+        user.isDelete = "true";
         await user.save();
 
         return {
