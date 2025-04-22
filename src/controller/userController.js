@@ -160,4 +160,71 @@ const deleteUser = async (req, res) => {
     }
 };
 
-export default { login , createUser, getAllUsers, updateUser, deleteUser };
+const logOut = async (req, res) => {
+    try {
+        return res.status(200).json({
+            EM: "Logout successful.",
+            EC: 0,
+            DT: "",
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({
+            EM: "Logout failed. " + error.message,
+            EC: -1,
+            DT: "",
+        });
+    }
+};
+
+const register = async (req, res) => {
+    try {
+        const { username, email, password} = req.body;
+
+        if (!username || !email || !password) {
+            return res.status(400).json({ message: "All fields are required." });
+        }
+
+        const data = await userService.register({ username, email, password });
+        res.status(201).json({
+            EM: data.EM,
+            EC: data.EC,
+            DT: data.DT,
+        });
+    } catch (error) {
+        res.status(500).json({
+            EM: "Register user error" + error.message,
+            EC: "-1",
+            DT: "",
+        });
+    }
+};
+
+const verifyEmail = async (req, res) => {
+    try {
+        const { email, otpCode } = req.body;
+
+        if (!email || !otpCode) {
+            return res.status(400).json({ 
+                EM: "Email and OTP are required.", 
+                EC: "-1", 
+                DT: "" 
+            });
+        }
+
+        const data = await userService.verifyEmail({ email, otpCode });
+        res.status(200).json({
+            EM: data.EM,
+            EC: data.EC,
+            DT: data.DT,
+        });
+    } catch (error) {
+        res.status(500).json({
+            EM: "Verify email error: " + error.message,
+            EC: "-1",
+            DT: "",
+        });
+    }
+};
+
+export default { login , createUser, getAllUsers, updateUser, deleteUser , logOut, register, verifyEmail};

@@ -28,6 +28,9 @@ export default (sequelize, DataTypes) => {
       phonenumber: DataTypes.STRING,
       password: DataTypes.STRING,
       isDelete: DataTypes.STRING,
+      isVerified: DataTypes.BOOLEAN,
+      otpCode: DataTypes.STRING,
+      otpExpiry: DataTypes.DATE,
     },
     {
       sequelize,

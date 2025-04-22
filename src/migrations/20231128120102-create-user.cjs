@@ -51,6 +51,15 @@ module.exports = {
           key: "id",
         },
       },
+      isVerified: {
+        type: Sequelize.BOOLEAN,
+      },
+      otpCode: {
+        type: Sequelize.STRING,
+      },
+      otpExpiry: {
+        type: Sequelize.DATE,
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,
