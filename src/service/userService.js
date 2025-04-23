@@ -160,6 +160,7 @@ const register = async ({ username, email, password }) => {
             otpCode,
             otpExpiry,
             isVerified: false,
+            isDelete: "false",
         });
 
         const subject = "Xác nhận email";
