@@ -62,6 +62,26 @@ const getAllCategory = async (limit, page, search) => {
     }
 };
 
+const getAllct = async () => {
+    try {
+        const { rows: users } = await db.Category.findAndCountAll({
+            order: [['createdAt', 'DESC']],
+        });
+
+        return {
+            EM: "Get all category successfully!",
+            EC: "0",
+            DT: users,
+        };
+    } catch (error) {
+        return {
+            EM: "Error Get all category: " + error.message,
+            EC: "-1",
+            DT: "",
+        };
+    }
+};
+
 const updateCategory = async (id, userData) => {
     try {
         const [updatedRowsCount, updatedRows] = await db.Category.update(userData, {
@@ -121,4 +141,4 @@ const deleteCategory = async (id) => {
     }
 };
 
-export default {createCategory ,getAllCategory,updateCategory, deleteCategory };
+export default {createCategory ,getAllCategory,updateCategory, deleteCategory ,getAllct};

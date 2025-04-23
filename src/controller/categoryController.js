@@ -46,6 +46,23 @@ const getAllCategory = async (req, res) => {
     }
 };
 
+const getAllct = async (req, res) => {
+    try {
+        const data = await categoryService.getAllct();
+        res.status(200).json({
+            EM: data.EM,
+            EC: data.EC,
+            DT: data.DT,
+        });
+    } catch (error) {
+        res.status(500).json({
+            EM: "Get all category error" + error.message,
+            EC: "-1",
+            DT: "",
+        });
+    }
+};
+
 const updateCategory = async (req, res) => {
     try {
         const { id } = req.params;
@@ -103,4 +120,4 @@ const deleteCategory = async (req, res) => {
     }
 };
 
-export default { createCategory ,getAllCategory, updateCategory, deleteCategory};
+export default { createCategory ,getAllCategory, updateCategory, deleteCategory, getAllct};

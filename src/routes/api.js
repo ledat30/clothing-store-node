@@ -20,6 +20,7 @@ const initApiRouter = (app) => {
   router.post("/verify-email", userController.verifyEmail);
 
   router.post("/category", categoryController.createCategory);
+  router.get("/all/category", categoryController.getAllct);
   router.get("/category", categoryController.getAllCategory);
   router.put('/category/:id', categoryController.updateCategory);
   router.delete('/category/:id', categoryController.deleteCategory);
