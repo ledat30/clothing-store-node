@@ -144,21 +144,18 @@ const deleteCategory = async (id) => {
 const getCategoryDetail = async (category_id, limit, page, search) => {
     try {
         const offset = (page - 1) * limit;
-        const whereClause = { category_id, isDelete: "false" }; // Lọc sản phẩm thuộc danh mục và chưa bị xóa
+        const whereClause = { category_id, isDelete: "false" };
 
-        // Thêm điều kiện tìm kiếm nếu có
         if (search) {
             whereClause.name = {
                 [db.Sequelize.Op.like]: `%${search}%`,
             };
         }
 
-        // Tìm danh mục theo id
         const category = await db.Category.findOne({
             where: { id: category_id },
-            attributes: ['id', 'name'], // Chỉ lấy các trường cần thiết
+            attributes: ['id', 'name'],
         });
-        console.log(`category`, category);
 
         if (!category) {
             return {
@@ -174,8 +171,8 @@ const getCategoryDetail = async (category_id, limit, page, search) => {
             where: whereClause,
             limit: Number(limit),
             offset: Number(offset),
-            order: [['createdAt', 'DESC']],
-            attributes: ['id', 'name', 'price', 'image', 'view_count'], // Lấy các trường cần thiết
+            // order: [['createdAt', 'DESC']],
+            attributes: ['id', 'name', 'price', 'image', 'view_count','description'],
             include: [
                 {
                     model: db.ProductAttribute,
@@ -185,9 +182,7 @@ const getCategoryDetail = async (category_id, limit, page, search) => {
                 },
             ],
         });
-        console.log(`products`, products);
 
-        // Xử lý hình ảnh (chuyển Buffer thành base64, tương tự getAllProduct)
         const formattedProducts = products.map(product => {
             if (product.image && Buffer.isBuffer(product.image)) {
                 const imageString = product.image.toString('utf8');
@@ -204,8 +199,8 @@ const getCategoryDetail = async (category_id, limit, page, search) => {
             EM: "Get category detail successfully!",
             EC: "0",
             DT: {
-                category, // Thông tin danh mục
-                products: formattedProducts, // Danh sách sản phẩm
+                category,
+                products: formattedProducts,
             },
             totalCount,
         };
