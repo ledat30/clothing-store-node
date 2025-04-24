@@ -120,4 +120,38 @@ const deleteCategory = async (req, res) => {
     }
 };
 
-export default { createCategory ,getAllCategory, updateCategory, deleteCategory, getAllct};
+const findOneCategory = async (req, res) => {
+    try {
+        const { id } = req.params; // Lấy categoryId từ URL
+        const { limit = 10, page = 1, search = "" } = req.query; // Lấy query params
+
+        if (!id) {
+            return res.status(400).json({
+                EM: "Category ID is required",
+                EC: "-1",
+                DT: null,
+            });
+        }
+
+        const data = await categoryService.getCategoryDetail(id, limit, page, search);
+        const totalPages = Math.ceil(data.totalCount / limit);
+
+        res.status(200).json({
+            EM: data.EM,
+            EC: data.EC,
+            DT: data.DT,
+            total: data.totalCount,
+            page: Number(page),
+            limit: Number(limit),
+            totalPages,
+        });
+    } catch (error) {
+        res.status(500).json({
+            EM: "Get category detail error: " + error.message,
+            EC: "-1",
+            DT: null,
+        });
+    }
+};
+
+export default { createCategory ,getAllCategory, updateCategory, deleteCategory, getAllct, findOneCategory};

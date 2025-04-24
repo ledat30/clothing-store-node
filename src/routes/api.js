@@ -22,6 +22,7 @@ const initApiRouter = (app) => {
   router.post("/category", categoryController.createCategory);
   router.get("/all/category", categoryController.getAllct);
   router.get("/category", categoryController.getAllCategory);
+  router.get('/category/:id', categoryController.findOneCategory);
   router.put('/category/:id', categoryController.updateCategory);
   router.delete('/category/:id', categoryController.deleteCategory);
 

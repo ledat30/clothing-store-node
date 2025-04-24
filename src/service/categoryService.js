@@ -141,4 +141,82 @@ const deleteCategory = async (id) => {
     }
 };
 
-export default {createCategory ,getAllCategory,updateCategory, deleteCategory ,getAllct};
+const getCategoryDetail = async (category_id, limit, page, search) => {
+    try {
+        const offset = (page - 1) * limit;
+        const whereClause = { category_id, isDelete: "false" }; // Lọc sản phẩm thuộc danh mục và chưa bị xóa
+
+        // Thêm điều kiện tìm kiếm nếu có
+        if (search) {
+            whereClause.name = {
+                [db.Sequelize.Op.like]: `%${search}%`,
+            };
+        }
+
+        // Tìm danh mục theo id
+        const category = await db.Category.findOne({
+            where: { id: category_id },
+            attributes: ['id', 'name'], // Chỉ lấy các trường cần thiết
+        });
+        console.log(`category`, category);
+
+        if (!category) {
+            return {
+                EM: "Category not found",
+                EC: "-1",
+                DT: null,
+                totalCount: 0,
+            };
+        }
+
+        // Lấy tổng số sản phẩm và danh sách sản phẩm
+        const { count: totalCount, rows: products } = await db.Product.findAndCountAll({
+            where: whereClause,
+            limit: Number(limit),
+            offset: Number(offset),
+            order: [['createdAt', 'DESC']],
+            attributes: ['id', 'name', 'price', 'image', 'view_count'], // Lấy các trường cần thiết
+            include: [
+                {
+                    model: db.ProductAttribute,
+                    where: { isDelete: "false" },
+                    required: false,
+                    attributes: ['id', 'color', 'size', 'quantity'],
+                },
+            ],
+        });
+        console.log(`products`, products);
+
+        // Xử lý hình ảnh (chuyển Buffer thành base64, tương tự getAllProduct)
+        const formattedProducts = products.map(product => {
+            if (product.image && Buffer.isBuffer(product.image)) {
+                const imageString = product.image.toString('utf8');
+                product.image = imageString.startsWith('data:image') 
+                    ? imageString 
+                    : `data:image/png;base64,${product.image.toString('base64')}`;
+            } else {
+                product.image = null;
+            }
+            return product;
+        });
+
+        return {
+            EM: "Get category detail successfully!",
+            EC: "0",
+            DT: {
+                category, // Thông tin danh mục
+                products: formattedProducts, // Danh sách sản phẩm
+            },
+            totalCount,
+        };
+    } catch (error) {
+        return {
+            EM: "Error getting category detail: " + error.message,
+            EC: "-1",
+            DT: null,
+            totalCount: 0,
+        };
+    }
+};
+
+export default {createCategory ,getAllCategory,updateCategory, deleteCategory ,getAllct, getCategoryDetail};

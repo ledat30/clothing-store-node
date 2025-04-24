@@ -118,7 +118,6 @@ const getAllProduct = async (limit, page, search) => {
 };
 
 const updateProduct = async (id, data, variants) => {
-    console.log(`variants`, variants)
     try {
         const product = await db.Product.findOne({ where: { id, isDelete: "false" } });
         if (!product) {
