@@ -82,10 +82,30 @@ const getAllProduct = async (limit, page, search) => {
             ],
         });
 
+        const formattedProducts = products.map(product => {
+            if (product.image && Buffer.isBuffer(product.image)) {
+                const imageString = product.image.toString('utf8');
+        
+                if (imageString.startsWith('data:image')) {
+                    product.image = imageString;
+                } else {
+                    const base64Image = product.image.toString('base64');
+                    product.image = `data:image/png;base64,${base64Image}`;
+                }
+            } else if (product.image && typeof product.image === 'string') {
+                product.image = product.image.startsWith('data:image')
+                    ? product.image
+                    : `data:image/png;base64,${product.image}`;
+            } else {
+                product.image = null;
+            }
+            return product;
+        });
+
         return {
             EM: "Get all successfully!",
             EC: "0",
-            DT: products,
+            DT: formattedProducts,
             totalCount,
         };
     } catch (error) {
