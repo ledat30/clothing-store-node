@@ -98,6 +98,7 @@ const getAllProduct = async (limit, page, search) => {
 };
 
 const updateProduct = async (id, data, variants) => {
+    console.log(`variants`, variants)
     try {
         const product = await db.Product.findOne({ where: { id, isDelete: "false" } });
         if (!product) {
@@ -108,48 +109,32 @@ const updateProduct = async (id, data, variants) => {
             };
         }
 
-        // 1. Cập nhật product chính
         await product.update(data);
 
-        // 2. Cập nhật variants nếu có
         if (Array.isArray(variants)) {
-            for (const variant of variants) {
-                if (variant.id) {
-                    // Nếu có id -> update biến thể hiện có
-                    const existingVariant = await db.AttributeValue.findOne({
-                        where: { id: variant.id, productId: id },
-                    });
+            await db.ProductAttribute.destroy({
+                where: { productId: id },
+            });
 
-                    if (existingVariant) {
-                        // Nếu biến thể có isDelete = "true" (xoá mềm) thì cập nhật luôn
-                        await existingVariant.update(variant);
-                    } else {
-                        // Nếu không tìm thấy biến thể, bỏ qua hoặc tạo mới tùy yêu cầu (ở đây bỏ qua)
-                    }
-                } else {
-                    // Nếu không có id -> tạo mới biến thể
-                    // Kiểm tra variant có đủ trường cần thiết
-                    if (!variant.color || !variant.size || !variant.quantity) {
-                        // Có thể skip hoặc trả lỗi, ở đây bỏ qua
-                        continue;
-                    }
-                    await db.AttributeValue.create({
-                        productId: id,
-                        color: variant.color,
-                        size: variant.size,
-                        quantity: variant.quantity,
-                        isDelete: variant.isDelete || "false",
-                    });
+            for (const variant of variants) {
+                if (!variant.color || !variant.size || !variant.quantity) {
+                    continue;
                 }
+                await db.ProductAttribute.create({
+                    productId: id,
+                    color: variant.color,
+                    size: variant.size,
+                    quantity: variant.quantity,
+                    isDelete: variant.isDelete || "false",
+                });
             }
         }
 
-        // Lấy lại product + variants mới nhất để trả về
         const updatedProduct = await db.Product.findOne({
             where: { id },
             include: [
                 {
-                    model: db.AttributeValue,
+                    model: db.ProductAttribute,
                     where: { isDelete: "false" },
                     required: false,
                     attributes: ['id', 'color', 'size', 'quantity', 'isDelete'],
@@ -186,7 +171,7 @@ const deleteProduct = async (id) => {
         await product.update({ isDelete: "true" });
 
         // Cập nhật isDelete cho tất cả variants liên quan
-        await db.AttributeValue.update(
+        await db.ProductAttribute.update(
             { isDelete: "true" },
             { where: { productId: id, isDelete: "false" } }
         );
