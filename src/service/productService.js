@@ -209,6 +209,57 @@ const deleteProduct = async (id) => {
     }
 };
 
-const productService = { createProduct, getAllProduct, updateProduct, deleteProduct };
+const findOneProduct = async (productId) => {
+    try {
+        const data = await db.Product.findOne({
+            where: { id: productId, isDelete: "false" },
+            attributes: ['id', 'name', 'price', 'image', 'view_count', 'description', 'contentMarkdown', 'contentHtml'],
+            include: [
+                {
+                    model: db.ProductAttribute,
+                    where: { isDelete: "false" },
+                    required: false,
+                    attributes: ['id', 'color', 'size', 'quantity'],
+                },
+            ],
+        });
+
+        if (!data) {
+            return {
+                EM: "Product not found",
+                EC: "-1",
+                DT: null,
+                totalCount: 0,
+            };
+        }
+
+        let formattedProduct = { ...data.get() }; 
+        if (formattedProduct.image && Buffer.isBuffer(formattedProduct.image)) {
+            const imageString = formattedProduct.image.toString('utf8');
+            formattedProduct.image = imageString.startsWith('data:image')
+                ? imageString
+                : `data:image/png;base64,${formattedProduct.image.toString('base64')}`;
+        } else {
+            formattedProduct.image = null;
+        }
+
+        return {
+            EM: "Get product detail successfully!",
+            EC: "0",
+            DT: {
+                products: formattedProduct, // Trả về object thay vì mảng
+            },
+        };
+    } catch (error) {
+        return {
+            EM: "Error getting product detail: " + error.message,
+            EC: "-1",
+            DT: null,
+            totalCount: 0,
+        };
+    }
+};
+
+const productService = { createProduct, getAllProduct, updateProduct, deleteProduct, findOneProduct };
 
 export default productService;

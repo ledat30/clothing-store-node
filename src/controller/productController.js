@@ -87,5 +87,34 @@ const deleteProduct = async (req, res) => {
     }
 };
 
-const productController = { createProduct, getAllProduct, updateProduct, deleteProduct };
+
+const findOneProduct = async (req, res) => {
+    try {
+        const { id } = req.params; 
+
+        if (!id) {
+            return res.status(400).json({
+                EM: "Product ID is required",
+                EC: "-1",
+                DT: null,
+            });
+        }
+
+        const data = await productService.findOneProduct(id);
+
+        res.status(200).json({
+            EM: data.EM,
+            EC: data.EC,
+            DT: data.DT,
+        });
+    } catch (error) {
+        res.status(500).json({
+            EM: "Get product detail error: " + error.message,
+            EC: "-1",
+            DT: null,
+        });
+    }
+};
+
+const productController = { createProduct, getAllProduct, updateProduct, deleteProduct , findOneProduct};
 export default productController;

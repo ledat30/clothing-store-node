@@ -29,6 +29,7 @@ const initApiRouter = (app) => {
   router.post("/product", productController.createProduct);
   router.get("/product", productController.getAllProduct);
   router.put('/product/:id', productController.updateProduct);
+  router.get('/product/:id', productController.findOneProduct);
   router.delete('/product/:id', productController.deleteProduct);
 
   return app.use("/api", router);
