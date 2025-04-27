@@ -18,6 +18,7 @@ const initApiRouter = (app) => {
   router.post("/logOut", userController.logOut);
   router.post("/register", userController.register);
   router.post("/verify-email", userController.verifyEmail);
+  router.get("/user/getAllProvinceDistrictWard", userController.getAllProvinceDistrictWard);
 
   router.post("/category", categoryController.createCategory);
   router.get("/all/category", categoryController.getAllct);
@@ -31,6 +32,7 @@ const initApiRouter = (app) => {
   router.put('/product/:id', productController.updateProduct);
   router.get('/product/:id', productController.findOneProduct);
   router.delete('/product/:id', productController.deleteProduct);
+  router.post("/product/add-to-cart", productController.postAddToCart);
 
   return app.use("/api", router);
 };

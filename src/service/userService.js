@@ -2,7 +2,7 @@ import db from "../models/index.js";
 import bcrypt from "bcryptjs";
 import emailService from "./emailService.js";
 
-const createUser = async ({ username, email, password,phonenumber, role , provinceId, districtId,wardId ,isDelete}) => {
+const createUser = async ({ username, email, password, phonenumber, role, provinceId, districtId, wardId, isDelete }) => {
     try {
         const existingUser = await db.User.findOne({ where: { email } });
         if (existingUser) {
@@ -44,7 +44,7 @@ const createUser = async ({ username, email, password,phonenumber, role , provin
 const getAllUsers = async (limit, page, search) => {
     try {
         const offset = (page - 1) * limit;
-        const whereClause = {isDelete: "false"};
+        const whereClause = { isDelete: "false" };
 
         if (search) {
             whereClause.username = {
@@ -106,7 +106,7 @@ const updateUser = async (id, userData) => {
 };
 
 const deleteUser = async (id) => {
-    
+
     try {
         const user = await db.User.findByPk(id);
 
@@ -135,7 +135,44 @@ const deleteUser = async (id) => {
     }
 };
 
-const register = async ({ username, email, password }) => {
+const getAllProvinceDistrictWard = async () => {
+    try {
+        try {
+            let results = await db.Province.findAll({
+                attributes: ["id", "province_full_name", "province_name"],
+                include: [
+                    {
+                        model: db.District, attributes: ['id', 'district_full_name', 'district_name', 'provinceId'],
+                        include: [
+                            { model: db.Ward, attributes: ['id', 'ward_name', 'ward_full_name', 'districtId'] }
+                        ]
+                    }
+                ]
+            });
+            return {
+                EM: "Get all success!",
+                EC: 0,
+                DT: results,
+            };
+        } catch (error) {
+            console.log(error);
+            return {
+                EM: "Somnething wrongs with services",
+                EC: -1,
+                DT: [],
+            };
+        }
+    } catch (error) {
+        console.log(error);
+        return {
+            EM: "Somnething wrongs with services",
+            EC: -1,
+            DT: [],
+        };
+    }
+}
+
+const register = async ({ username, email, password, phonenumber, wardId, districtId, provinceId }) => {
     try {
         const existingUser = await db.User.findOne({ where: { email } });
         if (existingUser) {
@@ -149,14 +186,18 @@ const register = async ({ username, email, password }) => {
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const otpCode = Math.floor(1000 + Math.random() * 9000);
-        const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); 
+        const otpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
-        
+
         const newUser = await db.User.create({
             username,
             email,
             password: hashedPassword,
             role: "customer",
+            phonenumber,
+            provinceId,
+            wardId,
+            districtId,
             otpCode,
             otpExpiry,
             isVerified: false,
@@ -182,6 +223,8 @@ const register = async ({ username, email, password }) => {
 };
 
 const verifyEmail = async ({ email, otpCode }) => {
+    console.log('đầu vào',email, otpCode);
+    
     try {
         // Tìm người dùng theo email
         const user = await db.User.findOne({ where: { email } });
@@ -204,7 +247,7 @@ const verifyEmail = async ({ email, otpCode }) => {
         }
 
         // Kiểm tra OTP và thời gian hết hạn
-        if (user.otpCode !== otpCode || user.otpExpiry < new Date()) {
+        if (String(user.otpCode) !== String(otpCode) || new Date(user.otpExpiry) < new Date()) {
             return {
                 EM: "Invalid or expired OTP.",
                 EC: "-1",
@@ -233,4 +276,4 @@ const verifyEmail = async ({ email, otpCode }) => {
     }
 };
 
-export default { createUser, getAllUsers, updateUser, deleteUser , register, verifyEmail};
+export default { createUser, getAllUsers, updateUser, deleteUser, register, verifyEmail, getAllProvinceDistrictWard };

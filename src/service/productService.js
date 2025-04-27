@@ -85,7 +85,7 @@ const getAllProduct = async (limit, page, search) => {
         const formattedProducts = products.map(product => {
             if (product.image && Buffer.isBuffer(product.image)) {
                 const imageString = product.image.toString('utf8');
-        
+
                 if (imageString.startsWith('data:image')) {
                     product.image = imageString;
                 } else {
@@ -233,7 +233,7 @@ const findOneProduct = async (productId) => {
             };
         }
 
-        let formattedProduct = { ...data.get() }; 
+        let formattedProduct = { ...data.get() };
         if (formattedProduct.image && Buffer.isBuffer(formattedProduct.image)) {
             const imageString = formattedProduct.image.toString('utf8');
             formattedProduct.image = imageString.startsWith('data:image')
@@ -260,6 +260,92 @@ const findOneProduct = async (productId) => {
     }
 };
 
-const productService = { createProduct, getAllProduct, updateProduct, deleteProduct, findOneProduct };
+const postAddToCart = async (product_attribute_value_Id, userId, provinceId, districtId, wardId, body) => {
+    try {
+        let order = await db.Order.findOne({
+            where: {
+                userId: userId,
+                order_date: {
+                    [Op.between]: [startOfDay, endOfDay]
+                },
+                status: 'pending'
+            }
+        });
+
+        if (order) {
+            let orderItem = await db.OrderItem.findOne({
+                where: {
+                    orderId: order.id,
+                    product_AttributeId: product_attribute_value_Id
+                }
+            });
+
+            if (orderItem) {
+                orderItem.quantily += body.quantily;
+                await orderItem.save();
+            } else {
+                orderItem = await db.OrderItem.create({
+                    orderId: order.id,
+                    product_AttributeId: product_attribute_value_Id,
+                    quantily: body.quantily,
+                    price_per_item: body.price_per_item
+                });
+            }
+
+            let totalAmount = 0;
+            const allOrderItems = await db.OrderItem.findAll({ where: { orderId: order.id } });
+            allOrderItems.forEach(item => {
+                totalAmount += (item.quantily * item.price_per_item);
+            });
+
+            order.total_amount = totalAmount;
+            await order.save();
+
+            return {
+                EM: "Add to cart success!",
+                EC: 0,
+                DT: orderItem
+            };
+        }
+
+        if (!order) {
+            order = await db.Order.create({
+                total_amount: 0,
+                order_date: new Date(),
+                status: 'pending',
+                userId: userId,
+                provinceId: provinceId,
+                districtId: districtId,
+                wardId: wardId,
+            });
+
+            let orderItem = await db.OrderItem.create({
+                orderId: order.id,
+                product_AttributeId: product_attribute_value_Id,
+                quantily: body.quantily,
+                price_per_item: body.price_per_item
+            });
+
+            let totalAmount = body.quantily * body.price_per_item;
+            order.total_amount = totalAmount;
+            await order.save();
+
+            return {
+                EM: "Add to cart success!",
+                EC: 0,
+                DT: orderItem
+            };
+        }
+    } catch (error) {
+        console.error(error);
+        return {
+            EM: "Create error",
+            EC: -1,
+            DT: ""
+        };
+    }
+};
+
+const productService = { createProduct, getAllProduct, updateProduct, deleteProduct, findOneProduct,postAddToCart };
 
 export default productService;

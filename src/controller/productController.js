@@ -90,7 +90,7 @@ const deleteProduct = async (req, res) => {
 
 const findOneProduct = async (req, res) => {
     try {
-        const { id } = req.params; 
+        const { id } = req.params;
 
         if (!id) {
             return res.status(400).json({
@@ -116,5 +116,23 @@ const findOneProduct = async (req, res) => {
     }
 };
 
-const productController = { createProduct, getAllProduct, updateProduct, deleteProduct , findOneProduct};
+const postAddToCart = async (req, res) => {
+    try {
+        let data = await productService.postAddToCart(req.query.product_attribute_value_Id, req.query.userId, req.query.provinceId, req.query.districtId, req.query.wardId, req.body);
+        return res.status(200).json({
+            EM: data.EM,
+            EC: data.EC,
+            DT: data.DT,
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            EM: "Create error",
+            EC: "-1",
+            DT: "",
+        });
+    }
+}
+
+const productController = { createProduct, getAllProduct, updateProduct, deleteProduct, findOneProduct,postAddToCart };
 export default productController;

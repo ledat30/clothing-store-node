@@ -177,15 +177,34 @@ const logOut = async (req, res) => {
     }
 };
 
+const getAllProvinceDistrictWard = async (req, res) => {
+    try {
+      let data = await userService.getAllProvinceDistrictWard();
+  
+      return res.status(200).json({
+        EM: data.EM,
+        EC: data.EC,
+        DT: data.DT,
+      });
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        EM: "Error",
+        EC: "-1",
+        DT: "",
+      });
+    }
+  }
+
 const register = async (req, res) => {
     try {
-        const { username, email, password} = req.body;
+        const { username, email, password, phonenumber, wardId, districtId, provinceId} = req.body;
 
         if (!username || !email || !password) {
             return res.status(400).json({ message: "All fields are required." });
         }
 
-        const data = await userService.register({ username, email, password });
+        const data = await userService.register({ username, email, password,phonenumber, wardId, districtId, provinceId });
         res.status(201).json({
             EM: data.EM,
             EC: data.EC,
@@ -227,4 +246,4 @@ const verifyEmail = async (req, res) => {
     }
 };
 
-export default { login , createUser, getAllUsers, updateUser, deleteUser , logOut, register, verifyEmail};
+export default { login , createUser, getAllUsers, updateUser, deleteUser , logOut, register, verifyEmail, getAllProvinceDistrictWard};
