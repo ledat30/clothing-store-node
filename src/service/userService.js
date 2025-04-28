@@ -223,7 +223,6 @@ const register = async ({ username, email, password, phonenumber, wardId, distri
 };
 
 const verifyEmail = async ({ email, otpCode }) => {
-    console.log('đầu vào',email, otpCode);
     
     try {
         // Tìm người dùng theo email

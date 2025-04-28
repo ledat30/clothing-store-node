@@ -11,7 +11,7 @@ export default (sequelize, DataTypes) => {
         static associate(models) {
             // define association here
             ProductAttribute.belongsTo(models.Product, { foreignKey: "productId" });
-            ProductAttribute.hasMany(models.OrderItem, { foreignKey: "category_id" });
+            ProductAttribute.hasMany(models.OrderItem, { foreignKey: "product_AttributeId" });
         }
     }
     ProductAttribute.init(

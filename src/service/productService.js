@@ -265,9 +265,6 @@ const postAddToCart = async (product_attribute_value_Id, userId, provinceId, dis
         let order = await db.Order.findOne({
             where: {
                 userId: userId,
-                order_date: {
-                    [Op.between]: [startOfDay, endOfDay]
-                },
                 status: 'pending'
             }
         });
@@ -281,13 +278,13 @@ const postAddToCart = async (product_attribute_value_Id, userId, provinceId, dis
             });
 
             if (orderItem) {
-                orderItem.quantily += body.quantily;
+                orderItem.quantily += body.quantity;
                 await orderItem.save();
             } else {
                 orderItem = await db.OrderItem.create({
                     orderId: order.id,
                     product_AttributeId: product_attribute_value_Id,
-                    quantily: body.quantily,
+                    quantily: body.quantity,
                     price_per_item: body.price_per_item
                 });
             }
@@ -313,6 +310,7 @@ const postAddToCart = async (product_attribute_value_Id, userId, provinceId, dis
                 total_amount: 0,
                 order_date: new Date(),
                 status: 'pending',
+                payment_method:"cod",
                 userId: userId,
                 provinceId: provinceId,
                 districtId: districtId,
@@ -322,11 +320,11 @@ const postAddToCart = async (product_attribute_value_Id, userId, provinceId, dis
             let orderItem = await db.OrderItem.create({
                 orderId: order.id,
                 product_AttributeId: product_attribute_value_Id,
-                quantily: body.quantily,
+                quantily: body.quantity,
                 price_per_item: body.price_per_item
             });
 
-            let totalAmount = body.quantily * body.price_per_item;
+            let totalAmount = body.quantity * body.price_per_item;
             order.total_amount = totalAmount;
             await order.save();
 

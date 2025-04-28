@@ -75,7 +75,7 @@ const login = async (req, res) => {
             });
         }
 
-        const payload = { id: user._id, email: user.email, role: user.role };
+        const payload = { id: user.id, email: user.email, role: user.role, provinceId: user.provinceId, districtId: user.districtId, wardId: user.wardId, phonenumber: user.phonenumber };
         const token = jwt.sign(payload, process.env.JWT_SECRET, {
             expiresIn: process.env.JWT_EXPIRES_IN || "1d",
         });
@@ -86,10 +86,14 @@ const login = async (req, res) => {
             DT: {
                 token,
                 user: {
-                    id: user._id,
+                    id: user.id,
                     email: user.email,
                     username: user.username,
                     role: user.role,
+                    provinceId: user.provinceId,
+                    districtId: user.districtId,
+                    wardId: user.wardId,
+                    phonenumber: user.phonenumber,
                 },
             },
         });
