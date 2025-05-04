@@ -1,4 +1,5 @@
 import db from "../models/index.js";
+const { sequelize } = db;
 
 const createProduct = async ({ name, description, image, price, contentHtml, contentMarkdown, category_id, variants }) => {
     try {
@@ -355,7 +356,7 @@ const getAllProductAddToCart = async (userId) => {
                 order: [["id", "DESC"]],
                 include: [{
                     model: db.ProductAttribute,
-                    attributes: ['id', 'color', 'size','quantity'],
+                    attributes: ['id', 'color', 'size', 'quantity'],
                     include: [{
                         model: db.Product,
                         attributes: ["name", "price", "description", 'image'],
@@ -489,6 +490,134 @@ const getRandomItemsFromArray = (array, numberOfItems) => {
     return shuffledArray.slice(0, numberOfItems);
 };
 
-const productService = { createProduct, getAllProduct, updateProduct, deleteProduct, findOneProduct, postAddToCart, getAllProductAddToCart, deleteProductCart, getRandomProducts };
+const createBuyProduct = async (orderId, product_attribute_value_Id, body) => {
+    const purchaseQuantity = parseInt(body.quantily);
+    const pricePerItem = parseFloat(body.price_per_item);
+    const shippingFee = parseFloat(body.shippingFee);
+    const transaction = await sequelize.transaction();
+    const wardId = body.ward;
+    const provinceId = body.province;
+    const districtId = body.district;
+    const customerName = body.customerName;
+    const address_detail = body.address_detail;
+    const phonenumber = body.phonenumber;
+
+    try {
+        const order = await db.Order.findByPk(orderId, { transaction });
+        if (!order) {
+            throw new Error('Order not found.');
+        }
+
+        const item = await db.OrderItem.findOne({
+            where: { orderId: orderId, product_AttributeId: product_attribute_value_Id },
+            transaction
+        });
+
+        if (!item) throw new Error('Product not found in order.');
+
+        let newOrder = null;
+
+        if (purchaseQuantity === item.quantily) {
+            await order.update({
+                status: 'Processing', payment_method: 'ship cod', total_amount: pricePerItem * purchaseQuantity + shippingFee, provinceId: provinceId, districtId: districtId, wardId: wardId, customerName: customerName, phonenumber: phonenumber, address_detail: address_detail,
+            }, { transaction });
+        } else {
+            newOrder = await db.Order.create({
+                userId: order.userId,
+                status: 'Processing',
+                total_amount: pricePerItem * purchaseQuantity + shippingFee,
+                order_date: new Date(),
+                payment_method: 'ship cod',
+                provinceId: provinceId,
+                districtId: districtId,
+                wardId: wardId,
+                phonenumber: phonenumber,
+                address_detail: address_detail,
+                customerName: customerName,
+            }, { transaction });
+
+            await item.update({ quantily: purchaseQuantity, orderId: newOrder.id }, { transaction });
+        }
+
+        // Update Inventory
+        const productColorSize = await db.ProductAttribute.findByPk(item.product_AttributeId);
+        if (!productColorSize) {
+            throw new Error('Product color size not found.');
+        }
+
+        const updatedCurrentNumber = productColorSize.quantity - purchaseQuantity;
+        await productColorSize.update({ quantity: updatedCurrentNumber }, { transaction });
+
+        //end
+        await transaction.commit();
+        return {
+            EM: 'Update successful',
+            EC: 0,
+            DT: { orderId: newOrder ? newOrder.id : order.id }
+        };
+    } catch (error) {
+        console.error('Transaction error:', error);
+        await transaction.rollback();
+        throw error;
+    }
+};
+
+const buyNowProduct = async (product_attribute_value_Id, userId, body) => {
+    try {
+        let order = await db.Order.findOne({ where: { userId: userId, createdAt: new Date() } });
+        let newOrder;
+        if (!order) {
+            newOrder = await db.Order.create({
+                total_amount: body.total,
+                status: 'Processing',
+                payment_method: 'ship cod',
+                userId: userId,
+                provinceId: body.province,
+                districtId: body.district,
+                wardId: body.ward,
+                phonenumber: body.phonenumber,
+                customerName: body.customerName,
+                address_detail: body.address_detail,
+            });
+        } else {
+            newOrder = order;
+        }
+        let orderItem = await db.OrderItem.findOne({
+            where: { orderId: newOrder.id, product_AttributeId: product_attribute_value_Id }
+        })
+        if (!orderItem) {
+            orderItem = await db.OrderItem.create({
+                orderId: newOrder.id,
+                product_AttributeId: product_attribute_value_Id,
+                quantily: body.quantily,
+                price_per_item: body.price_item,
+            })
+        }
+
+        const productColorSize = await db.ProductAttribute.findByPk(orderItem.product_AttributeId);
+
+        if (!productColorSize) {
+            throw new Error('Product color size not found.');
+        }
+
+        const updatedCurrentNumber = Number(productColorSize.quantity) - Number(body.quantily);
+
+        await productColorSize.update({ quantity: updatedCurrentNumber });
+        return {
+            EM: "Buy now success!",
+            EC: 0,
+            DT: ''
+        };
+    } catch (error) {
+        console.error(error);
+        return {
+            EM: "Create error",
+            EC: -1,
+            DT: ""
+        };
+    }
+}
+
+const productService = { createProduct, getAllProduct, updateProduct, deleteProduct, findOneProduct, postAddToCart, getAllProductAddToCart, deleteProductCart, getRandomProducts, createBuyProduct, buyNowProduct };
 
 export default productService;

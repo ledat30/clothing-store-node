@@ -179,5 +179,42 @@ const getRandomProducts = async (req, res) => {
     }
 }
 
-const productController = { createProduct, getAllProduct, updateProduct, deleteProduct, findOneProduct, postAddToCart, readProductCart, deleteProductCart, getRandomProducts };
+const createBuyProduct = async (req, res) => {
+    try {
+        const { orderId, product_attribute_value_Id } = req.query;
+        let data = await productService.createBuyProduct(orderId, product_attribute_value_Id, req.body);
+        return res.status(200).json({
+            EM: data.EM,
+            EC: data.EC,
+            DT: data.DT,
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            EM: "Error",
+            EC: "-1",
+            DT: "",
+        });
+    }
+}
+
+const buyNowProduct = async (req, res) => {
+    try {
+        let data = await productService.buyNowProduct(req.query.product_attribute_value_Id, req.query.userId, req.body);
+        return res.status(200).json({
+            EM: data.EM,
+            EC: data.EC,
+            DT: data.DT,
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            EM: "Create error",
+            EC: "-1",
+            DT: "",
+        });
+    }
+}
+
+const productController = { createProduct, getAllProduct, updateProduct, deleteProduct, findOneProduct, postAddToCart, readProductCart, deleteProductCart, getRandomProducts, createBuyProduct, buyNowProduct };
 export default productController;
