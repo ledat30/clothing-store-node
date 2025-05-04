@@ -310,7 +310,7 @@ const postAddToCart = async (product_attribute_value_Id, userId, provinceId, dis
                 total_amount: 0,
                 order_date: new Date(),
                 status: 'pending',
-                payment_method:"cod",
+                payment_method: "cod",
                 userId: userId,
                 provinceId: provinceId,
                 districtId: districtId,
@@ -344,6 +344,151 @@ const postAddToCart = async (product_attribute_value_Id, userId, provinceId, dis
     }
 };
 
-const productService = { createProduct, getAllProduct, updateProduct, deleteProduct, findOneProduct,postAddToCart };
+const getAllProductAddToCart = async (userId) => {
+    try {
+        const orders = await db.Order.findAll({
+            where: { userId, status: 'pending' },
+            attributes: ["id", "total_amount"],
+            include: [{
+                model: db.OrderItem,
+                attributes: ["id", "quantily", "price_per_item"],
+                order: [["id", "DESC"]],
+                include: [{
+                    model: db.ProductAttribute,
+                    attributes: ['id', 'color', 'size','quantity'],
+                    include: [{
+                        model: db.Product,
+                        attributes: ["name", "price", "description", 'image'],
+                    }],
+                }],
+            }],
+        });
+
+        if (!orders || orders.length === 0) {
+            return {
+                EM: "No pending orders found for this user.",
+                EC: -1,
+                DT: [],
+            };
+        }
+
+        const filteredOrders = orders.filter(order => order.OrderItems && order.OrderItems.length > 0);
+
+        if (filteredOrders.length === 0) {
+            console.log("No OrderItems in orders.");
+            return {
+                EM: "No products in cart.",
+                EC: -1,
+                DT: [],
+            };
+        }
+
+        // Process images
+        for (let order of filteredOrders) {
+            for (let item of order.OrderItems) {
+                const productAttr = item.ProductAttribute;
+                const product = productAttr?.Product;
+
+                if (product?.image) {
+                    let img = product.image;
+
+                    if (Buffer.isBuffer(img)) {
+                        const imageString = img.toString('utf8');
+                        product.image = imageString.startsWith('data:image')
+                            ? imageString
+                            : `data:image/png;base64,${img.toString('base64')}`;
+                    } else if (typeof img === 'string') {
+                        product.image = img.startsWith('data:image')
+                            ? img
+                            : `data:image/png;base64,${img}`;
+                    } else {
+                        product.image = null;
+                    }
+                }
+            }
+        }
+
+        return {
+            EM: "Get all products in cart successfully!",
+            EC: 0,
+            DT: filteredOrders,
+        };
+    } catch (error) {
+        console.error("Error in getAllProductAddToCart:", error);
+        return {
+            EM: "Something went wrong with service.",
+            EC: -1,
+            DT: [],
+        };
+    }
+};
+
+const deleteProductCart = async (id) => {
+    try {
+        let product = await db.OrderItem.findOne({
+            where: { id: id },
+        });
+        if (!product) {
+            return {
+                EM: "Product not exist",
+                EC: 2,
+                DT: [],
+            };
+        }
+
+        let orderId = product.orderId;
+
+        await product.destroy();
+
+        let remainingOrderItems = await db.OrderItem.findAll({
+            where: { orderId: orderId },
+        });
+
+        if (remainingOrderItems.length === 0) {
+            await db.Order.destroy({
+                where: { id: orderId },
+            });
+        }
+
+        return {
+            EM: "Delete product successfully!",
+            EC: 0,
+            DT: [],
+        };
+    } catch (error) {
+        console.log(error);
+        return {
+            EM: "Error from server",
+            EC: 1,
+            DT: [],
+        };
+    }
+}
+
+const getRandomProducts = async () => {
+    try {
+        const allProducts = await db.Product.findAll({
+            where: { isDelete: `false` },
+            attributes: ["id", "name", "price", "image"],
+        });
+        if (allProducts && allProducts.length > 0) {
+            allProducts.forEach((item) => {
+                item.image = new Buffer.from(item.image, "base64").toString(
+                    "binary"
+                );
+            });
+        }
+        const randomProducts = getRandomItemsFromArray(allProducts, 6);
+        return randomProducts;
+    } catch (error) {
+        throw new Error(error.message);
+    }
+}
+const getRandomItemsFromArray = (array, numberOfItems) => {
+    const shuffledArray = array.sort(() => 0.5 - Math.random());
+    return shuffledArray.slice(0, numberOfItems);
+};
+
+const productService = { createProduct, getAllProduct, updateProduct, deleteProduct, findOneProduct, postAddToCart, getAllProductAddToCart, deleteProductCart, getRandomProducts };
 
 export default productService;

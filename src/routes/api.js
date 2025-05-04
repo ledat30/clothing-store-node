@@ -2,6 +2,7 @@ import express from "express";
 import userController from "../controller/userController.js";
 import categoryController from "../controller/categoryController.js";
 import productController from "../controller/productController.js";
+import commentController from "../controller/commentController.js";
 
 const router = express.Router();
 
@@ -29,10 +30,17 @@ const initApiRouter = (app) => {
 
   router.post("/product", productController.createProduct);
   router.get("/product", productController.getAllProduct);
+  router.get("/product/read-product-cart", productController.readProductCart);
+  router.delete("/product/delete-product-cart", productController.deleteProductCart);
+  router.get('/random-products', productController.getRandomProducts);
+  router.post("/product/add-to-cart", productController.postAddToCart);
   router.put('/product/:id', productController.updateProduct);
   router.get('/product/:id', productController.findOneProduct);
   router.delete('/product/:id', productController.deleteProduct);
-  router.post("/product/add-to-cart", productController.postAddToCart);
+
+  router.get("/comment/read", commentController.readFunc);
+  router.post("/comment/create", commentController.createFunc);
+  router.delete("/comment/delete", commentController.deleteFunc);
 
   return app.use("/api", router);
 };

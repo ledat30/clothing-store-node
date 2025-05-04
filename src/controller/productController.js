@@ -134,5 +134,50 @@ const postAddToCart = async (req, res) => {
     }
 }
 
-const productController = { createProduct, getAllProduct, updateProduct, deleteProduct, findOneProduct,postAddToCart };
+const readProductCart = async (req, res) => {
+    try {
+        const userId = req.query.userId;
+
+        const data = await productService.getAllProductAddToCart(userId);
+
+        return res.status(200).json(data);
+    } catch (error) {
+        console.error("Controller error:", error);
+        return res.status(500).json({
+            EM: "Internal server error",
+            EC: -1,
+            DT: null,
+        });
+    }
+};
+
+const deleteProductCart = async (req, res) => {
+    try {
+        let data = await productService.deleteProductCart(req.body.id);
+
+        return res.status(200).json({
+            EM: data.EM,
+            EC: data.EC,
+            DT: data.DT,
+        });
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            EM: "Error",
+            EC: "-1",
+            DT: "",
+        });
+    }
+}
+
+const getRandomProducts = async (req, res) => {
+    try {
+        const randomProducts = await productService.getRandomProducts();
+        res.json(randomProducts);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
+const productController = { createProduct, getAllProduct, updateProduct, deleteProduct, findOneProduct, postAddToCart, readProductCart, deleteProductCart, getRandomProducts };
 export default productController;

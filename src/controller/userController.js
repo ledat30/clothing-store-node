@@ -5,13 +5,13 @@ import db from "../models/index.js";
 
 const createUser = async (req, res) => {
     try {
-        const { username, email, password,phonenumber, role, provinceId, districtId, wardId,isDelete } = req.body;
+        const { username, email, password, phonenumber, role, provinceId, districtId, wardId, isDelete } = req.body;
 
         if (!password || !email || !role) {
             return res.status(400).json({ message: "All fields are required." });
         }
 
-        const data = await userService.createUser({ username, email, password,phonenumber, role , provinceId, districtId,wardId, isDelete});
+        const data = await userService.createUser({ username, email, password, phonenumber, role, provinceId, districtId, wardId, isDelete });
         res.status(201).json({
             EM: data.EM,
             EC: data.EC,
@@ -57,7 +57,15 @@ const login = async (req, res) => {
             return res.status(400).json({ message: "Email and password are required." });
         }
 
-        const user = await db.User.findOne({ where: { email } });
+        const user = await db.User.findOne({
+            where: { email },
+            include: [
+                { model: db.Province, attributes: ['province_name'] },
+                { model: db.District, attributes: ['district_name'] },
+                { model: db.Ward, attributes: ['ward_name'] },
+            ],
+        });
+
         if (!user) {
             return res.status(404).json({
                 EM: "User not found.",
@@ -75,8 +83,24 @@ const login = async (req, res) => {
             });
         }
 
-        const payload = { id: user.id, email: user.email, role: user.role, provinceId: user.provinceId, districtId: user.districtId, wardId: user.wardId, phonenumber: user.phonenumber };
-        const token = jwt.sign(payload, process.env.JWT_SECRET, {
+        const userInfo = {
+            id: user.id,
+            email: user.email,
+            username: user.username,
+            role: user.role,
+        };
+
+        if (user.role === 'customer') {
+            userInfo.provinceId = user.provinceId;
+            userInfo.districtId = user.districtId;
+            userInfo.wardId = user.wardId;
+            userInfo.phonenumber = user.phonenumber;
+            userInfo.wardName = user.Ward?.ward_name || null;
+            userInfo.districtName = user.District?.district_name || null;
+            userInfo.provinceName = user.Province?.province_name || null;
+        }
+
+        const token = jwt.sign(userInfo, process.env.JWT_SECRET, {
             expiresIn: process.env.JWT_EXPIRES_IN || "1d",
         });
 
@@ -85,16 +109,7 @@ const login = async (req, res) => {
             EC: 0,
             DT: {
                 token,
-                user: {
-                    id: user.id,
-                    email: user.email,
-                    username: user.username,
-                    role: user.role,
-                    provinceId: user.provinceId,
-                    districtId: user.districtId,
-                    wardId: user.wardId,
-                    phonenumber: user.phonenumber,
-                },
+                user: userInfo,
             },
         });
     } catch (error) {
@@ -106,6 +121,7 @@ const login = async (req, res) => {
         });
     }
 };
+
 
 const updateUser = async (req, res) => {
     try {
@@ -183,32 +199,32 @@ const logOut = async (req, res) => {
 
 const getAllProvinceDistrictWard = async (req, res) => {
     try {
-      let data = await userService.getAllProvinceDistrictWard();
-  
-      return res.status(200).json({
-        EM: data.EM,
-        EC: data.EC,
-        DT: data.DT,
-      });
+        let data = await userService.getAllProvinceDistrictWard();
+
+        return res.status(200).json({
+            EM: data.EM,
+            EC: data.EC,
+            DT: data.DT,
+        });
     } catch (error) {
-      console.log(error);
-      return res.status(500).json({
-        EM: "Error",
-        EC: "-1",
-        DT: "",
-      });
+        console.log(error);
+        return res.status(500).json({
+            EM: "Error",
+            EC: "-1",
+            DT: "",
+        });
     }
-  }
+}
 
 const register = async (req, res) => {
     try {
-        const { username, email, password, phonenumber, wardId, districtId, provinceId} = req.body;
+        const { username, email, password, phonenumber, wardId, districtId, provinceId } = req.body;
 
         if (!username || !email || !password) {
             return res.status(400).json({ message: "All fields are required." });
         }
 
-        const data = await userService.register({ username, email, password,phonenumber, wardId, districtId, provinceId });
+        const data = await userService.register({ username, email, password, phonenumber, wardId, districtId, provinceId });
         res.status(201).json({
             EM: data.EM,
             EC: data.EC,
@@ -228,10 +244,10 @@ const verifyEmail = async (req, res) => {
         const { email, otpCode } = req.body;
 
         if (!email || !otpCode) {
-            return res.status(400).json({ 
-                EM: "Email and OTP are required.", 
-                EC: "-1", 
-                DT: "" 
+            return res.status(400).json({
+                EM: "Email and OTP are required.",
+                EC: "-1",
+                DT: ""
             });
         }
 
@@ -250,4 +266,4 @@ const verifyEmail = async (req, res) => {
     }
 };
 
-export default { login , createUser, getAllUsers, updateUser, deleteUser , logOut, register, verifyEmail, getAllProvinceDistrictWard};
+export default { login, createUser, getAllUsers, updateUser, deleteUser, logOut, register, verifyEmail, getAllProvinceDistrictWard };
