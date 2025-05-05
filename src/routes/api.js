@@ -36,6 +36,7 @@ const initApiRouter = (app) => {
   router.post("/product/buy", productController.createBuyProduct);
   router.post("/product/buy-now", productController.buyNowProduct);
   router.post("/product/add-to-cart", productController.postAddToCart);
+  router.get("/order/read_all-orderBy_admin", productController.readAllOrderByAdmin);
   router.put('/product/:id', productController.updateProduct);
   router.get('/product/:id', productController.findOneProduct);
   router.delete('/product/:id', productController.deleteProduct);

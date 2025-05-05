@@ -1,5 +1,6 @@
 import db from "../models/index.js";
 const { sequelize } = db;
+import { Op } from 'sequelize';
 
 const createProduct = async ({ name, description, image, price, contentHtml, contentMarkdown, category_id, variants }) => {
     try {
@@ -260,6 +261,31 @@ const findOneProduct = async (productId) => {
         };
     }
 };
+
+const increaseCount = async (inputId) => {
+    try {
+      const product = await db.Product.findOne({
+        where: {
+          id: inputId
+        }
+      });
+      if (!product) {
+        throw new Error("Product not found");
+      }
+      product.view_count += 1;
+      await db.Product.update(
+        { view_count: product.view_count },
+        { where: { id: inputId } }
+      );
+      return {
+        EM: "Ok",
+        EC: 0,
+        DT: "",
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
 
 const postAddToCart = async (product_attribute_value_Id, userId, provinceId, districtId, wardId, body) => {
     try {
@@ -618,6 +644,122 @@ const buyNowProduct = async (product_attribute_value_Id, userId, body) => {
     }
 }
 
-const productService = { createProduct, getAllProduct, updateProduct, deleteProduct, findOneProduct, postAddToCart, getAllProductAddToCart, deleteProductCart, getRandomProducts, createBuyProduct, buyNowProduct };
+const readAllOrderByAdmin = async (page, limit, role, search = '') => {
+  try {
+    if (role !== 'admin') {
+      return {
+        EM: 'Permission denied. Admins only.',
+        EC: -2,
+        DT: [],
+      };
+    }
+
+    const offset = (page - 1) * limit;
+
+    // Đếm tổng đơn hàng với điều kiện search
+    const count = await db.Order.count({
+      where: { status: 'Processing' },
+      include: [
+        {
+          model: db.User,
+          where: {
+            username: {
+              [Op.substring]: search
+            }
+          }
+        }
+      ]
+    });
+
+    const rows = await db.Order.findAll({
+      where: { status: 'Processing' },
+      attributes: ['id', 'status', 'userId', 'total_amount', 'phonenumber', 'customerName', 'address_detail'],
+      offset: offset,
+      limit: limit,
+      include: [
+        {
+          model: db.OrderItem,
+          attributes: ['quantily', 'price_per_item', 'id'],
+          include: [
+            {
+              model: db.ProductAttribute,
+              attributes: ['id', 'color', 'size', 'quantity'],
+              include: [
+                {
+                  model: db.Product,
+                  attributes: ['name', 'image', 'price']
+                }
+              ]
+            }
+          ]
+        },
+        {
+          model: db.User,
+          attributes: ['username', 'phonenumber', 'id'],
+          where: {
+            username: {
+              [Op.substring]: search
+            }
+          }
+        },
+        {
+          model: db.Province,
+          attributes: ['province_name']
+        },
+        {
+          model: db.District,
+          attributes: ['district_name']
+        },
+        {
+          model: db.Ward,
+          attributes: ['ward_name']
+        },
+      ]
+    });
+
+    // Xử lý ảnh base64
+    rows.forEach(order => {
+      order.OrderItems.forEach(orderItem => {
+        const product = orderItem.ProductAttribute?.Product;
+        if (product?.image) {
+          if (Buffer.isBuffer(product.image)) {
+            const imageString = product.image.toString('utf8');
+            product.image = imageString.startsWith('data:image')
+              ? imageString
+              : `data:image/png;base64,${product.image.toString('base64')}`;
+          } else if (typeof product.image === 'string') {
+            product.image = product.image.startsWith('data:image')
+              ? product.image
+              : `data:image/png;base64,${product.image}`;
+          } else {
+            product.image = null;
+          }
+        }
+      });
+    });
+
+    const totalPages = Math.ceil(count / limit);
+
+    return {
+      EM: 'Get all order for admin',
+      EC: 0,
+      DT: {
+        totalPages: totalPages,
+        totalRow: count,
+        orders: rows
+      }
+    };
+  } catch (error) {
+    console.log(error);
+    return {
+      EM: 'Something wrongs with services',
+      EC: -1,
+      DT: [],
+    };
+  }
+};
+
+
+const productService = { createProduct, getAllProduct, updateProduct, deleteProduct, findOneProduct, postAddToCart, getAllProductAddToCart, deleteProductCart, getRandomProducts, createBuyProduct, buyNowProduct,increaseCount ,readAllOrderByAdmin};
 
 export default productService;

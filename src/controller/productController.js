@@ -101,6 +101,7 @@ const findOneProduct = async (req, res) => {
         }
 
         const data = await productService.findOneProduct(id);
+        await productService.increaseCount(id);
 
         res.status(200).json({
             EM: data.EM,
@@ -216,5 +217,31 @@ const buyNowProduct = async (req, res) => {
     }
 }
 
-const productController = { createProduct, getAllProduct, updateProduct, deleteProduct, findOneProduct, postAddToCart, readProductCart, deleteProductCart, getRandomProducts, createBuyProduct, buyNowProduct };
+const readAllOrderByAdmin = async (req, res) => {
+    try {
+      const role = req.query.role;
+      const search = req.query.search || '';
+      if (req.query.page && req.query.limit) {
+        let page = req.query.page;
+        let limit = req.query.limit;
+  
+        let data = await productService.readAllOrderByAdmin(+page, +limit, role,search);
+        return res.status(200).json({
+          EM: data.EM,
+          EC: data.EC,
+          DT: data.DT,
+        })
+      }
+    } catch (error) {
+      console.log(error);
+      return res.status(500).json({
+        EM: "Error service",
+        EC: -1,
+        DT: "",
+      })
+    }
+  }
+  
+
+const productController = { createProduct, getAllProduct, updateProduct, deleteProduct, findOneProduct, postAddToCart, readProductCart, deleteProductCart, getRandomProducts, createBuyProduct, buyNowProduct ,readAllOrderByAdmin};
 export default productController;
