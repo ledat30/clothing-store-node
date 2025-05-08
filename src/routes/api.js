@@ -50,6 +50,10 @@ const initApiRouter = (app) => {
     "/product/confirm-order-by-transfer",
     productController.ConfirmOrdersByTransfer
   );
+  router.get(
+    "/product/read_status-order",
+    productController.readStatusOrderByUser
+  );
   router.put("/product/:id", productController.updateProduct);
   router.get("/product/:id", productController.findOneProduct);
   router.delete("/product/:id", productController.deleteProduct);

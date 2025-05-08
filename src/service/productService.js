@@ -868,6 +868,81 @@ const ConfirmOrdersByTransfer = async (body) => {
   }
 };
 
+const getreadStatusOrderWithPagination = async (page, limit, userId) => {
+  try {
+    let offset = (page - 1) * limit;
+    const { count, rows } = await db.Order.findAndCountAll({
+      offset: offset,
+      limit: limit,
+      where: {
+        userId: userId,
+        status: {
+          [db.Sequelize.Op.ne]: "pending",
+        },
+      },
+      attributes: ["id", "total_amount", "status"],
+      order: [["id", "DESC"]],
+      include: [
+        {
+          model: db.OrderItem,
+          attributes: ["id", "quantily", "price_per_item"],
+          include: [
+            {
+              model: db.ProductAttribute,
+              attributes: ["id", "color", "size", "quantity"],
+              include: [
+                {
+                  model: db.Product,
+                  attributes: ["name", "image"],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+
+    rows.forEach((order) => {
+      order.OrderItems.forEach((orderItem) => {
+        const product = orderItem.ProductAttribute?.Product;
+        if (product?.image) {
+          if (Buffer.isBuffer(product.image)) {
+            const imageString = product.image.toString("utf8");
+            product.image = imageString.startsWith("data:image")
+              ? imageString
+              : `data:image/png;base64,${product.image.toString("base64")}`;
+          } else if (typeof product.image === "string") {
+            product.image = product.image.startsWith("data:image")
+              ? product.image
+              : `data:image/png;base64,${product.image}`;
+          } else {
+            product.image = null;
+          }
+        }
+      });
+    });
+
+    let totalPages = Math.ceil(count / limit);
+    let data = {
+      totalPages: totalPages,
+      totalRow: count,
+      products: rows,
+    };
+    return {
+      EM: "Ok",
+      EC: 0,
+      DT: data,
+    };
+  } catch (error) {
+    console.log(error);
+    return {
+      EM: "Somnething wrongs with services",
+      EC: -1,
+      DT: [],
+    };
+  }
+};
+
 const productService = {
   createProduct,
   getAllProduct,
@@ -883,6 +958,7 @@ const productService = {
   increaseCount,
   readAllOrderByAdmin,
   ConfirmOrdersByTransfer,
+  getreadStatusOrderWithPagination,
 };
 
 export default productService;
