@@ -943,6 +943,58 @@ const getreadStatusOrderWithPagination = async (page, limit, userId) => {
   }
 };
 
+const cancelOrder = async (id) => {
+  try {
+    const order = await db.Order.findOne({
+      where: { id: id },
+    });
+    if (!order) {
+      return {
+        EM: "No order found with the provided ID!",
+        EC: -1,
+        DT: null,
+      };
+    }
+    if (order.status !== "Processing") {
+      return {
+        EM: "Đơn hàng đã được xác nhận mời bạn tải lại trang để cập nhập dữ liệu mới nhất",
+        EC: -2,
+        DT: null,
+      };
+    }
+
+    // await db.OrderItem.destroy({
+    //   where: { orderId: id },
+    // });
+
+    const [deletedOrderCount] = await db.Order.update(
+      { status: "cancel" },
+      { where: { id: id } }
+    );
+
+    if (deletedOrderCount > 0) {
+      return {
+        EM: "Order and related records deleted successfully!",
+        EC: 0,
+        DT: null,
+      };
+    } else {
+      return {
+        EM: "No order found with the provided ID!",
+        EC: -1,
+        DT: null,
+      };
+    }
+  } catch (error) {
+    console.log(error);
+    return {
+      EM: "Error occurred while canceling the order",
+      EC: -1,
+      DT: null,
+    };
+  }
+};
+
 const productService = {
   createProduct,
   getAllProduct,
@@ -959,6 +1011,7 @@ const productService = {
   readAllOrderByAdmin,
   ConfirmOrdersByTransfer,
   getreadStatusOrderWithPagination,
+  cancelOrder,
 };
 
 export default productService;

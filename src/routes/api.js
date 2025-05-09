@@ -54,13 +54,17 @@ const initApiRouter = (app) => {
     "/product/read_status-order",
     productController.readStatusOrderByUser
   );
+  router.delete("/product/cancel-order", productController.cancelOrder);
   router.put("/product/:id", productController.updateProduct);
   router.get("/product/:id", productController.findOneProduct);
   router.delete("/product/:id", productController.deleteProduct);
 
   router.get("/comment/read", commentController.readFunc);
+  router.get("/comment/read-admin", commentController.readFuncAdmin);
   router.post("/comment/create", commentController.createFunc);
+  router.get("/search-comment", commentController.searchComment);
   router.delete("/comment/delete", commentController.deleteFunc);
+  router.delete("/comment/admin-delete", commentController.deleteFuncAdmin);
 
   return app.use("/api", router);
 };
