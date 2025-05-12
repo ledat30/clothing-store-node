@@ -24,6 +24,7 @@ const initApiRouter = (app) => {
     "/user/getAllProvinceDistrictWard",
     userController.getAllProvinceDistrictWard
   );
+  router.get("/home/search-home-website", userController.searchHomePage);
 
   router.post("/category", categoryController.createCategory);
   router.get("/all/category", categoryController.getAllct);
