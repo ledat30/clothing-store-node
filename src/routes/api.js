@@ -42,6 +42,7 @@ const initApiRouter = (app) => {
   router.get("/random-products", productController.getRandomProducts);
   router.post("/product/buy", productController.createBuyProduct);
   router.post("/product/buy-now", productController.buyNowProduct);
+  router.get("/product/selling-products", productController.sellingProducts);
   router.post("/product/add-to-cart", productController.postAddToCart);
   router.get(
     "/order/read_all-orderBy_admin",
@@ -67,13 +68,31 @@ const initApiRouter = (app) => {
   router.delete("/comment/delete", commentController.deleteFunc);
   router.delete("/comment/admin-delete", commentController.deleteFuncAdmin);
 
-  router.get("/admin/dashboard-inactiveAccount", dashboardAdminController.findInactiveAccounts);
-  router.get("/admin/dashboard-summary", dashboardAdminController.adminDashboardSummary);
+  router.get(
+    "/admin/dashboard-inactiveAccount",
+    dashboardAdminController.findInactiveAccounts
+  );
+  router.get(
+    "/admin/dashboard-summary",
+    dashboardAdminController.adminDashboardSummary
+  );
   router.get("/admin/dashboard-order", dashboardAdminController.dashboardOrder);
-  router.get("/admin/dashboard-user", dashboardAdminController.adminDashboardUser);
-  router.get("/admin/dashboard-product", dashboardAdminController.adminDashboardProduct);
-  router.get("/admin/dashboard-revenue-by-store", dashboardAdminController.storeDashboardRevenue);
-  router.get("/admin/dashboard-revenue-by-date", dashboardAdminController.storeDashboardRevenueByDate);
+  router.get(
+    "/admin/dashboard-user",
+    dashboardAdminController.adminDashboardUser
+  );
+  router.get(
+    "/admin/dashboard-product",
+    dashboardAdminController.adminDashboardProduct
+  );
+  router.get(
+    "/admin/dashboard-revenue-by-store",
+    dashboardAdminController.storeDashboardRevenue
+  );
+  router.get(
+    "/admin/dashboard-revenue-by-date",
+    dashboardAdminController.storeDashboardRevenueByDate
+  );
 
   return app.use("/api", router);
 };

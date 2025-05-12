@@ -995,6 +995,99 @@ const cancelOrder = async (id) => {
   }
 };
 
+const getSellingProductsWithPagination = async (page, limit) => {
+  try {
+    const offset = (page - 1) * limit;
+
+    const { count, rows } = await db.OrderItem.findAndCountAll({
+      attributes: [
+        [db.sequelize.col("ProductAttribute.Product.id"), "id"],
+        [db.sequelize.col("ProductAttribute.Product.name"), "name"],
+        [db.sequelize.col("ProductAttribute.Product.image"), "image"],
+        [db.sequelize.col("ProductAttribute.Product.price"), "price"],
+        [
+          db.sequelize.fn("SUM", db.sequelize.col("OrderItem.quantily")),
+          "total_quantity_ordered",
+        ],
+      ],
+      include: [
+        {
+          model: db.Order,
+          attributes: [],
+          where: {
+            status: "delivering",
+          },
+        },
+        {
+          model: db.ProductAttribute,
+          attributes: [],
+          include: [
+            {
+              model: db.Product,
+              attributes: [],
+            },
+          ],
+        },
+      ],
+      group: ["ProductAttribute.Product.id"],
+      having: db.sequelize.literal("SUM(`OrderItem`.`quantily`) > 0"),
+      order: [[db.sequelize.literal("total_quantity_ordered"), "DESC"]],
+      offset: offset,
+      limit: limit,
+      subQuery: false,
+    });
+
+    const formattedProducts = rows.map((product) => {
+      const productData = product.toJSON();
+
+      let image = productData.image;
+      if (image && image.type === "Buffer" && Array.isArray(image.data)) {
+        const buffer = Buffer.from(image.data);
+        const imageString = buffer.toString("utf8");
+        image = imageString.startsWith("data:image")
+          ? imageString
+          : `data:image/png;base64,${buffer.toString("base64")}`;
+      } else if (image && Buffer.isBuffer(image)) {
+        const imageString = image.toString("utf8");
+        image = imageString.startsWith("data:image")
+          ? imageString
+          : `data:image/png;base64,${image.toString("base64")}`;
+      } else if (image && typeof image === "string") {
+        image = image.startsWith("data:image")
+          ? image
+          : `data:image/png;base64,${image}`;
+      } else {
+        image = null;
+      }
+
+      return {
+        ...productData,
+        image,
+      };
+    });
+
+    const totalPages = Math.ceil(count.length / limit);
+    const data = {
+      totalPages: totalPages,
+      totalRow: count.length,
+      products: formattedProducts,
+    };
+
+    return {
+      EM: "Ok",
+      EC: 0,
+      DT: data,
+    };
+  } catch (error) {
+    console.log(error);
+    return {
+      EM: "Something went wrong with services",
+      EC: -1,
+      DT: [],
+    };
+  }
+};
+
 const productService = {
   createProduct,
   getAllProduct,
@@ -1012,6 +1105,7 @@ const productService = {
   ConfirmOrdersByTransfer,
   getreadStatusOrderWithPagination,
   cancelOrder,
+  getSellingProductsWithPagination,
 };
 
 export default productService;
