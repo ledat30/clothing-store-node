@@ -6,12 +6,20 @@ import bodyParser from "body-parser";
 import connection from "./config/connectDB.js";
 import configCors from "./config/cors.js";
 import cookieParser from "cookie-parser";
+import cors from 'cors';
 
 const app = express();
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3000;
 
 //config cors
 configCors(app);
+
+app.use(cors({
+  origin: process.env.REACT_URL || 'http://localhost:4000',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['X-Requested-With', 'Content-Type', 'Authorization'],
+  credentials: true
+}));
 
 //config body-parser
 app.use(bodyParser.json({ limit: "50mb" }));

@@ -2,7 +2,7 @@
 //Add headers before the routes are defined
 const configCors = (app) => {
     app.use(function (req, res, next) {
-      res.setHeader("Access-Control-Allow-Origin", process.env.REACT_URL);
+      res.setHeader("Access-Control-Allow-Origin", process.env.REACT_URL || 'http://localhost:4000');
   
       res.setHeader(
         "Access-Control-Allow-Methods",

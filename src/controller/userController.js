@@ -122,7 +122,7 @@ const login = async (req, res) => {
       userInfo.provinceName = user.Province?.province_name || null;
     }
 
-    const token = jwt.sign(userInfo, process.env.JWT_SECRET, {
+    const token = jwt.sign(userInfo,"my_hardcoded_secret", {
       expiresIn: process.env.JWT_EXPIRES_IN || "1d",
     });
 
